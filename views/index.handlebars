@@ -1,0 +1,24 @@
+<div id="wrapper">
+    <h1 class="main-text" style="margin-left: 10px;">ScrapeScience News</h1>
+    <h3 class="main-text" style="margin-left: 10px;"><i>Nerd out on the newest knowledge</i></h3>
+    <button class="btn btn-info" id="scrape-open" onclick="location.href=window.location.href + 'scrape/openculture';">Scrape OpenCulture</button>
+    <button class="btn btn-primary" id="scrape-science" onclick="location.href=window.location.href + 'scrape/sciencenews';">Scrape ScienceNews</button>
+    <div id="articles">
+        {{#each articles}}
+            <div class="card" style="width: 18rem;">
+                {{#if this.image}}
+                    <img  src="{{this.image}}" style="width: 100%; height: auto">
+                {{/if}}
+                {{#if this.video}}
+                    <iframe class="video-box"  src="{{this.video}}"></iframe>
+                {{/if}}
+                <div class="card-body">
+                    <h5 class="card-title"></h5>
+                    <p class="card-text">{{this.title}}</p>
+                    <a href="articles/{{this._id}}" class="btn btn-info inline-btn">View Article</a>
+                    <a href="{{this.link}}" target="_blank" class="btn btn-warning inline-btn">Original</a>
+                </div>
+            </div>
+        {{/each}}
+    </div>
+</div>
