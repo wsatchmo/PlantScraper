@@ -32,15 +32,28 @@ router.get("/",function(req,res){
 // A GET route for scraping Openculture
 router.get("/scrape/openculture", function(req, res) {
     // Grab html with axios
-    axios.get("http://www.openculture.com").then(function(response) {
+    axios.get("http://plantnet.rbgsyd.nsw.gov.au/PlantNet/cycad/ident.html").then(function(response) {
       // Load into cheerio, save it to $ for shorthand selector
       var $ = cheerio.load(response.data);
+
+  console.log("RESPONSE:", response.data);
+
+    
   
       // WHAT YOU WANT TO DO: grab each image and display it, and the h2 associated with it
-      $(".recent_post").each(function(i, element) {
+      $( "td" ).each(function(i, element) {
         // Save an empty result object
-        var result = {};
-  
+        let result = {}; //put stuff in this to push to db
+        var sites = [];
+
+        //NEED TO GET THE LINKS FROM THE TABLE, TO GO INTO THE LINKS TO GET MORE LINKS TO GET INFORMATION.......
+        console.log("this.chirren:::", this.children);
+        
+        sites.push($(this).children("a").attr("src"));
+        console.log("Sites::", sites);
+
+    /*
+
         // Add the text and href of every link, and save them as properties of the result object
         result.title = $(this)
           .children("h1")
@@ -97,7 +110,10 @@ router.get("/scrape/openculture", function(req, res) {
             } else { //Otherwise, log that it exists
                 console.log("This article is already in the db: "+ data.title);
             }
-        });  
+        }); 
+        
+    */
+        
       });
   
       // Return to home page
