@@ -8,7 +8,7 @@ var Article = require("../models/Article.js");
 
 let result = {}; //put stuff in this to push to db
 var sites = [];
-var secondSites = [];
+var finalSites = [];
 
 router.get("/",function(req,res){
 
@@ -119,7 +119,7 @@ router.get("/scrape/openculture", function(req, res) {
         
       });
 
-      
+      getSecondLayer();
   
       // Return to home page
       res.redirect("/");
@@ -128,15 +128,44 @@ router.get("/scrape/openculture", function(req, res) {
 
 function getSecondLayer(){
   for (let i=0; i< sites.length; i++){
-    axios.get(sites[i]).then(function(response) {
+    // console.log("Site scraped: ", "http://plantnet.rbgsyd.nsw.gov.au/PlantNet/cycad/" + sites[i])
+    // console.log( 
+    //   "\n========================\n",
+    //   "SCRAPED: http://plantnet.rbgsyd.nsw.gov.au/PlantNet/cycad/" + sites[i], " : \n"
+    // )
+    axios.get("http://plantnet.rbgsyd.nsw.gov.au/PlantNet/cycad/" + sites[i]).then(function(response) {
       var x = cheerio.load(response.data);
+      console.log(
+        "==================\n" +
+        "LOG - " + sites[i] + ":",
+        "RES:: ", response.data
+      );
       x( "td" ).each(function(i, element) {
-        const finalSite = $(this).children("a").attr("href");
-        console.log("finalSite:", finalSite);
+        let final = x(this);
+        let finalSite = x(this).children("a").attr("href");
+
+        //TEST
+        console.log(
+          "finalSite:", finalSite
+        );
+
+        if(finalSite !== undefined && finalSite !== 'http://www.rbgsyd.nsw.gov.au'){
+          finalSites.push(finalSite);
+        }
       });
+      console.log("finalSites:" , finalSites);
     });
   }
 }
+
+//GOAL: Get all "Final" sites into one object, then run through them all
+
+
+
+
+
+
+
 
 // A GET route for scraping ScienceNews
 router.get("/scrape/sciencenews", function(req, res) {
