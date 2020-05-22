@@ -6,6 +6,10 @@ const cheerio = require("cheerio");
 // Requiring Article model
 var Article = require("../models/Article.js");
 
+let result = {}; //put stuff in this to push to db
+var sites = [];
+var secondSites = [];
+
 router.get("/",function(req,res){
 
     Article.find({}).lean()
@@ -36,22 +40,21 @@ router.get("/scrape/openculture", function(req, res) {
       // Load into cheerio, save it to $ for shorthand selector
       var $ = cheerio.load(response.data);
 
-  console.log("RESPONSE:", response.data);
+      // console.log("RESPONSE:", response.data);
 
-    
-  
-      // WHAT YOU WANT TO DO: grab each image and display it, and the h2 associated with it
+    // console.info("=========================================");
+    // console.log("Cheerio version:", $);
+
+      // WHAT YOU WANT TO DO: grab each link and follow them to get to plant info
       $( "td" ).each(function(i, element) {
-        // Save an empty result object
-        let result = {}; //put stuff in this to push to db
-        var sites = [];
-
         //NEED TO GET THE LINKS FROM THE TABLE, TO GO INTO THE LINKS TO GET MORE LINKS TO GET INFORMATION.......
-        console.log("this.chirren:::", this.children);
+        // console.log("this.chirren:::", this.children.attribs);
         
-        sites.push($(this).children("a").attr("src"));
+        const newSite = $(this).children("a").attr("href");
+        if (newSite !== undefined && newSite !== 'http://www.rbgsyd.nsw.gov.au'){
+          sites.push(newSite);
+        }
         console.log("Sites::", sites);
-
     /*
 
         // Add the text and href of every link, and save them as properties of the result object
@@ -115,11 +118,25 @@ router.get("/scrape/openculture", function(req, res) {
     */
         
       });
+
+      
   
       // Return to home page
       res.redirect("/");
     });
 });
+
+function getSecondLayer(){
+  for (let i=0; i< sites.length; i++){
+    axios.get(sites[i]).then(function(response) {
+      var x = cheerio.load(response.data);
+      x( "td" ).each(function(i, element) {
+        const finalSite = $(this).children("a").attr("href");
+        console.log("finalSite:", finalSite);
+      });
+    });
+  }
+}
 
 // A GET route for scraping ScienceNews
 router.get("/scrape/sciencenews", function(req, res) {
