@@ -5,8 +5,9 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 // Requiring Article model
 var Article = require("../models/Article.js");
+var SiteList = require("../models/SiteList.js");
 
-let result = {}; //put stuff in this to push to db
+let sitesObj = {}; //put stuff in this to push to db
 var sites = [];
 var finalSites = [];
 
@@ -55,47 +56,9 @@ router.get("/scrape/openculture", function(req, res) {
           sites.push(newSite);
         }
         console.log("Sites::", sites);
-    /*
-
-        // Add the text and href of every link, and save them as properties of the result object
-        result.title = $(this)
-          .children("h1")
-          .children("a")
-          .text()
-          .replace("/n", "")
-          .trim();
-          //console.log("TITLE:: ", result.title);
-  
-        result.link = $(this)
-          .children("h1")
-          .children("a")
-          .attr("href");
-          //console.log("LINK:: ", result.link);
-        
-        result.video = $(this)
-          .children("div")
-          .children("div")
-          .children("div")
-          .children("div")
-          .children("span")
-          .children("iframe")
-          .attr("src");
-       
-        result.image = $(this)
-          .children("div")
-          .children("div")
-          .children("p")
-          .children("img")
-          .attr("src");
-          
-        // if (result.video !== undefined){
-        //   console.log("VIDEO: ", result.video);
-        // } else {
-        //   console.log("IMAGE: ", result.image);
-        // }  
-        //   console.log("------------------");
-  
-
+    
+    
+      /* MAY STILL NEED THIS LATER
         Article.findOne({title:result.title},function(err,data){
             //Check if the title already exists in the db
             if (!data){
@@ -114,8 +77,7 @@ router.get("/scrape/openculture", function(req, res) {
                 console.log("This article is already in the db: "+ data.title);
             }
         }); 
-        
-    */
+      */
         
       });
 
@@ -140,9 +102,9 @@ function getSecondLayer(){
         "LOG - " + sites[i] + ":",
         "RES:: ", response.data
       );
-      x( "td" ).each(function(i, element) {
+      x( "a" ).each(function(i, element) {
         let final = x(this);
-        let finalSite = x(this).children("a").attr("href");
+        let finalSite = x(this).attr("href");
 
         //TEST
         console.log(
@@ -154,13 +116,70 @@ function getSecondLayer(){
         }
       });
       console.log("finalSites:" , finalSites);
+      //ADD TO DB
+      sitesObj.list = finalSites;
+      SiteList.create(sitesObj)
+        .then(function(dbArticle) {
+        // View the added result in the console
+        // console.log(dbArticle);
+        console.log("COMPLETED ~")
+        })
+        .catch(function(err) {
+        // If an error occurred, log it
+        console.log(err);
+      });
     });
   }
 }
 
 //GOAL: Get all "Final" sites into one object, then run through them all
+//To do this; you will need to modify what is already here so that it collects ONLY USEFUL LINKS,
+//and puts 'first layer' links with no second layer into the Useful Links section;
+//THEN we will scrape information from all useful links
 
 
+
+//                           ud$$$**$$$$$$$bc.
+//                        u@**"        4$$$$$$$Nu
+//                      J                ""#$$$$$$r
+//                     @                       $$$$b
+//                   .F                        ^*3$$$
+//                  :% 4                         J$$$N
+//                  $  :F                       :$$$$$
+//                 4F  9                       J$$$$$$$
+//                 4$   k             4$$$$bed$$$$$$$$$
+//                 $$r  'F            $$$$$$$$$$$$$$$$$r
+//                 $$$   b.           $$$$$$$$$$$$$$$$$N
+//                 $$$$$k 3eeed$$b    $$$Euec."$$$$$$$$$
+//  .@$**N.        $$$$$" $$$$$$F'L $$$$$$$$$$$  $$$$$$$
+//  :$$L  'L       $$$$$ 4$$$$$$  * $$$$$$$$$$F  $$$$$$F         edNc
+// @$$$$N  ^k      $$$$$  3$$$$*%   $F4$$$$$$$   $$$$$"        d"  z$N
+// $$$$$$   ^k     '$$$"   #$$$F   .$  $$$$$c.u@$$$          J"  @$$$$r
+// $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
+//  ^$$$$$$.    "NL   "N. z@*     $$$  $$$$$$$$$$$$$P      $P  d$$$$$$$
+//     ^"*$$$$b   '*L   9$E      4$$$  d$$$$$$$$$$$"     d*   J$$$$$r
+//          ^$$$$u  '$.  $$$L     "#" d$$$$$$".@$$    .@$"  z$$$$*"
+//            ^$$$$. ^$N.3$$$       4u$$$$$$$ 4$$$  u$*" z$$$"
+//              '*$$$$$$$$ *$b      J$$$$$$$b u$$P $"  d$$P
+//                 #$$$$$$ 4$ 3*$"$*$ $"$'c@@$$$$ .u@$$$P
+//                   "$$$$  ""F~$ $uNr$$$^&J$$$$F $$$$#
+//                     "$$    "$$$bd$.$W$$$$$$$$F $$"
+//                       ?k         ?$$$$$$$$$$$F'*
+//                        9$$bL     z$$$$$$$$$$$F
+//                         $$$$    $$$$$$$$$$$$$
+//                          '#$$c  '$$$$$$$$$"
+//                           .@"#$$$$$$$$$$$$b
+//                         z*      $$$$$$$$$$$$N.
+//                       e"      z$$"  #$$$k  '*$$.
+//                   .u*      u@$P"      '#$$c   "$$c
+//            u@$*"""       d$$"            "$$$u  ^*$$b.
+//          :$F           J$P"                ^$$$c   '"$$$$$$bL
+//         d$$  ..      @$#                      #$$b         '#$
+//         9$$$$$$b   4$$                          ^$$k         '$
+//          "$$6""$b u$$                             '$    d$$$$$P
+//            '$F $$$$$"                              ^b  ^$$$$b$
+//             '$W$$$$"            GOBLN!!             'b@$$$$"
+//                                                      ^$$$* 
 
 
 
