@@ -6,6 +6,8 @@ const cheerio = require("cheerio");
 // Requiring Article model
 var Article = require("../models/Article.js");
 var SiteList = require("../models/SiteList.js");
+//Require filesystem
+var fs = require('file-system');
 
 let sitesObj = {}; //put stuff in this to push to db
 var sites = [];
@@ -55,7 +57,7 @@ router.get("/scrape/openculture", function(req, res) {
         if (newSite !== undefined && newSite !== 'http://www.rbgsyd.nsw.gov.au'){
           sites.push(newSite);
         }
-        console.log("Sites::", sites);
+        // console.log("Sites::", sites);
     
     
       /* MAY STILL NEED THIS LATER
@@ -96,33 +98,91 @@ function getSecondLayer(){
     //   "SCRAPED: http://plantnet.rbgsyd.nsw.gov.au/PlantNet/cycad/" + sites[i], " : \n"
     // )
     axios.get("http://plantnet.rbgsyd.nsw.gov.au/PlantNet/cycad/" + sites[i]).then(function(response) {
+      SiteList.collection.drop();
       var x = cheerio.load(response.data);
-      console.log(
-        "==================\n" +
-        "LOG - " + sites[i] + ":",
-        "RES:: ", response.data
-      );
+      // console.log(
+      //   "==================\n" +
+      //   "LOG - " + sites[i] + ":",
+      //   "RES:: ", response.data
+      // );
       x( "a" ).each(function(i, element) {
         let final = x(this);
         let finalSite = x(this).attr("href");
 
         //TEST
-        console.log(
-          "finalSite:", finalSite
-        );
+        // console.log(
+        //   "finalSite:", finalSite
+        // );
 
-        if(finalSite !== undefined && finalSite !== 'http://www.rbgsyd.nsw.gov.au'){
-          finalSites.push(finalSite);
+        if(finalSite !== undefined && finalSite !== 'http://www.rbgsyd.nsw.gov.au' && !finalSite.includes('#key')){
+          //if it has ../.. ::
+            if (finalSite.includes("../..")){
+              let z = finalSite.replace("../..", "http://plantnet.rbgsyd.nsw.gov.au");
+              if(finalSites.indexOf(z) === -1){
+                finalSites.push(z);
+              }
+            }
+          //if it doesn't have /
+          else if (finalSite.charAt(0) !== '/') {
+            let w = "http://plantnet.rbgsyd.nsw.gov.au/PlantNet/cycad/" + finalSite;
+            if(finalSites.indexOf(w) === -1){
+              finalSites.push(w);
+            }
+          }
+          //otherwise ::
+            else {
+              let y = "http://plantnet.rbgsyd.nsw.gov.au" + finalSite;
+              if(finalSites.indexOf(y) === -1){
+                finalSites.push(y);
+              }
+            }
         }
       });
-      console.log("finalSites:" , finalSites);
+      //console.log("finalSites:" , finalSites);
       //ADD TO DB
       sitesObj.list = finalSites;
       SiteList.create(sitesObj)
-        .then(function(dbArticle) {
-        // View the added result in the console
-        // console.log(dbArticle);
-        console.log("COMPLETED ~")
+        .then(function(dbSites) {
+          console.log("COMPLETED ~");
+          console.log("dbSites:: ", dbSites);
+          //LAST CALLBACK:: Take this list and scrape all THOSE sites
+          let finalObj = {};
+          let finalArr = [];
+          let finalList = dbSites.list;
+          for (let j=0; j< finalList.length; j++){
+            axios.get(finalList[j]).then(function(response) {
+              //LAST LEVEL OF SCRAPE
+
+                  // ──────────────███████──███████
+                  // ──────────████▓▓▓▓▓▓████░░░░░██
+                  // ────────██▓▓▓▓▓▓▓▓▓▓▓▓██░░░░░░██
+                  // ──────██▓▓▓▓▓▓████████████░░░░██
+                  // ────██▓▓▓▓▓▓████████████████░██
+                  // ────██▓▓████░░░░░░░░░░░░██████     -  EET'SA MEE!
+                  // ──████████░░░░░░██░░██░░██▓▓▓▓██
+                  // ──██░░████░░░░░░██░░██░░██▓▓▓▓██
+                  // ██░░░░██████░░░░░░░░░░░░░░██▓▓██
+                  // ██░░░░░░██░░░░██░░░░░░░░░░██▓▓██
+                  // ──██░░░░░░░░░███████░░░░██████
+                  // ────████░░░░░░░███████████▓▓██
+                  // ──────██████░░░░░░░░░░██▓▓▓▓██
+                  // ────██▓▓▓▓██████████████▓▓██
+                  // ──██▓▓▓▓▓▓▓▓████░░░░░░████
+                  // ████▓▓▓▓▓▓▓▓██░░░░░░░░░░██
+                  // ████▓▓▓▓▓▓▓▓██░░░░░░░░░░██
+                  // ██████▓▓▓▓▓▓▓▓██░░░░░░████████
+                  // ──██████▓▓▓▓▓▓████████████████
+                  // ────██████████████████████▓▓▓▓██
+                  // ──██▓▓▓▓████████████████▓▓▓▓▓▓██
+                  // ████▓▓██████████████████▓▓▓▓▓▓██
+                  // ██▓▓▓▓██████████████████▓▓▓▓▓▓██
+                  // ██▓▓▓▓██████████──────██▓▓▓▓████
+                  // ██▓▓▓▓████──────────────██████ 
+                  // ──████  BU- NU - NU - NU-NUP -NUNT!! BROOP, BROOP, BROOP - BROOP DOOP DEEDOOP ………
+
+              var finalPage = cheerio.load(response.data);
+            });
+          }
         })
         .catch(function(err) {
         // If an error occurred, log it
@@ -178,12 +238,16 @@ function getSecondLayer(){
 //         9$$$$$$b   4$$                          ^$$k         '$
 //          "$$6""$b u$$                             '$    d$$$$$P
 //            '$F $$$$$"                              ^b  ^$$$$b$
-//             '$W$$$$"            GOBLN!!             'b@$$$$"
+//             '$W$$$$"         OH MY GOBLN!!!         'b@$$$$"
 //                                                      ^$$$* 
 
 
 
 
+
+
+
+/*
 
 
 // A GET route for scraping ScienceNews
@@ -322,5 +386,8 @@ router.post("/articles/comment/delete", function(req, res) {
 // });
 
 //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-  
+
+*/
+
 module.exports=router;
+
