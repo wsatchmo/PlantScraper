@@ -20,6 +20,15 @@ npm install
 ```
 Sit back and wait for it to install.
 
+You'll also need to install MongoDB, [the instructions for which can be found here](https://docs.mongodb.com/manual/installation/). They can be a little hard to follow; again, let me know if you need help. 
+
+Afterward, run these in two different terminal tabs:
+```bash
+mongo
+mongodb
+```
+Cross your fingers for no errors; if there are any, their fixes can almost assuredly be found on the webbernet. Good luck!
+
 After it's done, run
 ```bash
 node server.js
