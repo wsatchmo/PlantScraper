@@ -1,56 +1,31 @@
-# ScrapeScience
+# PlantScraper
 
-```diff
-+ HOW IT WORKS +
+Triple-layer scrape
+
+Uses CheerioJS, ExcelJS, Axios, MongoDB, and of course Node/Express
+
+Instructions for Al:
+
+Install [Homebrew](https://brew.sh/) and [Brew install Node](https://changelog.com/posts/install-node-js-with-homebrew-on-os-x) or install [Node.js](https://nodejs.org/en/download/) directly from the install package; NPM (node package manager, or no peanuts man, or nothing perfectly meaningful, or november puppies megacity, etc.) will be installed automatically. 
+
+Check to make sure it installed by opening terminal and typing in 
+```bash
+node -v
+```
+It should give you a version number; if it gives you anything else, try again, sucka! (or email me for help, nbd).
+
+If all goes well, you'll need to install the required packages. cd (change directory) to the file downloaded, and run 
+```bash
+npm install
+```
+Sit back and wait for it to install.
+
+After it's done, run
+```bash
+node server.js
 ```
 
-  • When a user visits ScrapeScience they can scrape stories from Openculture and ScienceNews to display to the home page. Each scraped article is saved to a mongoDB database. 
-  The app will scrape for the following information:
+It will run on localhost 3001 - so either click the given link or visit https://localhost:3001/
+If everything is right so far, the site will come up; just hit the scrape PlantNet button, and an XLSX file should be generated via ExcelJS in the same file, containing (most of) the Cycad informaiton from Plantnet
 
-  - Headline/Summary - the title of the article/a short summary of the article
-
-  - URL - a link to the original article
-
-  - Photos or videos associated with that article.
-
-  • Users can leave comments on the articles displayed and revisit them later. The comments are saved to the database in an array in their articles' object. Users may delete comments left on articles. 
-  
-  • All stored comments are visible to (and able to be deleted by) every user. This means that, for now, they are more like notes than comments.
-
-```diff
-! DEPLOYMENT !
-```
-
-This project is deployed [here on Heroku](https://sheltered-coast-01541.herokuapp.com/) 
-
-![Screenshots](/public/images/screenshot.png)
-
-```diff
-- NOTES -
-```
-
-* Currently any comment may be deleted by any user; user-specific comment editing or deletion requires an authorization method - a project addition for the future
-
-* If downloading for personal use, you may want to change the database information, found in the **server.js** file:
-
-```js
-    // Connect to Mongo DB -- used by Heroku
-    var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/mongoHeadlines";
-    mongoose.connect(MONGODB_URI, { useNewUrlParser: true }); //Change to your db↑↑↑
-    var db = mongoose.connection;
-```
-
-```diff
-! RESOURCES USED !
-```
-##### [Bootstrap](https://getbootstrap.com/)
-
-##### [Cheerio](https://cheerio.js.org/)
-
-##### [Heroku](https://heroku.com/)
-
-##### [MongoDB](https://www.mongodb.com/)
-
-```diff
-# Happy coding! #
-```
+Let me know if you need any assistance - good luck!
