@@ -6,8 +6,8 @@ const cheerio = require("cheerio");
 // Requiring Article model
 var Article = require("../models/Article.js");
 var SiteList = require("../models/SiteList.js");
-//Require filesystem
-var fs = require('file-system');
+//Require ExcelJs
+const ExcelJS = require('exceljs');
 
 let sitesObj = {}; //put stuff in this to push to db
 var sites = [];
@@ -15,21 +15,21 @@ var finalSites = [];
 
 router.get("/",function(req,res){
 
-    Article.find({}).lean()
-    // execute query
-    .exec(function(error, body) {
-        //console.log("FIRING");
-        // Log any errors
-        if (error) {
-            console.log(error);
-        }
-        // Otherwise, send the body to the browser as a json object
-        else {
-          //console.log("Articles: ", body);   
-          // console.log(body);
-          res.render("index", {articles: body.reverse()});
-        }
-    });
+  Article.find({}).lean()
+  // execute query
+  .exec(function(error, body) {
+      //console.log("FIRING");
+      // Log any errors
+      if (error) {
+          console.log(error);
+      }
+      // Otherwise, send the body to the browser as a json object
+      else {
+        //console.log("Articles: ", body);   
+        // console.log(body);
+        res.render("index");
+      }
+  });
 });
 
 //FOR EACH:: IF LINK -- go into link, grab picture, data, etc in RTF
@@ -58,29 +58,6 @@ router.get("/scrape/openculture", function(req, res) {
           sites.push(newSite);
         }
         // console.log("Sites::", sites);
-    
-    
-      /* MAY STILL NEED THIS LATER
-        Article.findOne({title:result.title},function(err,data){
-            //Check if the title already exists in the db
-            if (!data){
-                // If it doesn't, create a new Article using the `result` object built from scraping
-                Article.create(result)
-                .then(function(dbArticle) {
-                // View the added result in the console
-                // console.log(dbArticle);
-                })
-                .catch(function(err) {
-                // If an error occurred, log it
-                console.log(err);
-                });
-
-            } else { //Otherwise, log that it exists
-                console.log("This article is already in the db: "+ data.title);
-            }
-        }); 
-      */
-        
       });
 
       getSecondLayer();
@@ -91,6 +68,22 @@ router.get("/scrape/openculture", function(req, res) {
 });
 
 function getSecondLayer(){
+
+  //||||||||||||||||||||||||||||||||||||||||||||||||
+  // create workbook by api.
+  var workbook = new ExcelJS.Workbook();
+
+  // must create one more sheet.
+  var sheet = workbook.addWorksheet("CycaScrape Export");
+
+  // you can create xlsx file now.
+  var reColumns=[
+    {header:'URL',key:'URL'},
+    {header:'Body',key:'Body'}
+  ];
+  sheet.columns = reColumns;
+  //||||||||||||||||||||||||||||||||||||||||||||||||
+
   for (let i=0; i< sites.length; i++){
     // console.log("Site scraped: ", "http://plantnet.rbgsyd.nsw.gov.au/PlantNet/cycad/" + sites[i])
     // console.log( 
@@ -106,7 +99,6 @@ function getSecondLayer(){
       //   "RES:: ", response.data
       // );
       x( "a" ).each(function(i, element) {
-        let final = x(this);
         let finalSite = x(this).attr("href");
 
         //TEST
@@ -144,45 +136,84 @@ function getSecondLayer(){
       SiteList.create(sitesObj)
         .then(function(dbSites) {
           console.log("COMPLETED ~");
-          console.log("dbSites:: ", dbSites);
+          // console.log("dbSites:: ", dbSites);
           //LAST CALLBACK:: Take this list and scrape all THOSE sites
-          let finalObj = {};
-          let finalArr = [];
-          let finalList = dbSites.list;
-          for (let j=0; j< finalList.length; j++){
-            axios.get(finalList[j]).then(function(response) {
-              //LAST LEVEL OF SCRAPE
 
-                  // ──────────────███████──███████
-                  // ──────────████▓▓▓▓▓▓████░░░░░██
-                  // ────────██▓▓▓▓▓▓▓▓▓▓▓▓██░░░░░░██
-                  // ──────██▓▓▓▓▓▓████████████░░░░██
-                  // ────██▓▓▓▓▓▓████████████████░██
-                  // ────██▓▓████░░░░░░░░░░░░██████     -  EET'SA MEE!
-                  // ──████████░░░░░░██░░██░░██▓▓▓▓██
-                  // ──██░░████░░░░░░██░░██░░██▓▓▓▓██
-                  // ██░░░░██████░░░░░░░░░░░░░░██▓▓██
-                  // ██░░░░░░██░░░░██░░░░░░░░░░██▓▓██
-                  // ──██░░░░░░░░░███████░░░░██████
-                  // ────████░░░░░░░███████████▓▓██
-                  // ──────██████░░░░░░░░░░██▓▓▓▓██
-                  // ────██▓▓▓▓██████████████▓▓██
-                  // ──██▓▓▓▓▓▓▓▓████░░░░░░████
-                  // ████▓▓▓▓▓▓▓▓██░░░░░░░░░░██
-                  // ████▓▓▓▓▓▓▓▓██░░░░░░░░░░██
-                  // ██████▓▓▓▓▓▓▓▓██░░░░░░████████
-                  // ──██████▓▓▓▓▓▓████████████████
-                  // ────██████████████████████▓▓▓▓██
-                  // ──██▓▓▓▓████████████████▓▓▓▓▓▓██
-                  // ████▓▓██████████████████▓▓▓▓▓▓██
-                  // ██▓▓▓▓██████████████████▓▓▓▓▓▓██
-                  // ██▓▓▓▓██████████──────██▓▓▓▓████
-                  // ██▓▓▓▓████──────────────██████ 
-                  // ──████  BU- NU - NU - NU-NUP -NUNT!! BROOP, BROOP, BROOP - BROOP DOOP DEEDOOP ………
 
-              var finalPage = cheerio.load(response.data);
+            // ──────────────███████──███████
+            // ──────────████▓▓▓▓▓▓████░░░░░██
+            // ────────██▓▓▓▓▓▓▓▓▓▓▓▓██░░░░░░██
+            // ──────██▓▓▓▓▓▓████████████░░░░██
+            // ────██▓▓▓▓▓▓████████████████░██
+            // ────██▓▓████░░░░░░░░░░░░██████     -  EET'SA MEE!
+            // ──████████░░░░░░██░░██░░██▓▓▓▓██
+            // ──██░░████░░░░░░██░░██░░██▓▓▓▓██
+            // ██░░░░██████░░░░░░░░░░░░░░██▓▓██
+            // ██░░░░░░██░░░░██░░░░░░░░░░██▓▓██
+            // ──██░░░░░░░░░███████░░░░██████
+            // ────████░░░░░░░███████████▓▓██
+            // ──────██████░░░░░░░░░░██▓▓▓▓██
+            // ────██▓▓▓▓██████████████▓▓██
+            // ──██▓▓▓▓▓▓▓▓████░░░░░░████
+            // ████▓▓▓▓▓▓▓▓██░░░░░░░░░░██
+            // ████▓▓▓▓▓▓▓▓██░░░░░░░░░░██
+            // ██████▓▓▓▓▓▓▓▓██░░░░░░████████
+            // ──██████▓▓▓▓▓▓████████████████
+            // ────██████████████████████▓▓▓▓██
+            // ──██▓▓▓▓████████████████▓▓▓▓▓▓██
+            // ████▓▓██████████████████▓▓▓▓▓▓██
+            // ██▓▓▓▓██████████████████▓▓▓▓▓▓██
+            // ██▓▓▓▓██████████──────██▓▓▓▓████
+            // ██▓▓▓▓████──────────────██████ 
+// ──████  BU- NU - NU - NU-NUP -NUNT!! BROOP, BROOP, BROOP - BROOP DOOP DEEDOOP ………
+
+
+          //FINAL LAYER
+
+          let last = dbSites.list;
+          // console.log("LAST:: ", last);
+          // console.log("LAST first ::", last[0]);
+
+          for (let j=0; j < last.length; j++){
+            // console.log("Site scraped: ", "http://plantnet.rbgsyd.nsw.gov.au/PlantNet/cycad/" + sites[i])
+            // console.log( 
+            //   "\n========================\n",
+            //   "SCRAPED: http://plantnet.rbgsyd.nsw.gov.au/PlantNet/cycad/" + sites[i], " : \n"
+            // )
+            axios.get(last[j]).then(function(response) {
+              // console.log("RES DATA::", response.data);
+              var lastX = response.data;
+              
+              //REMOVE FOOTER AND SCRIPTS
+              
+              //REGEX FOR REMOVING ALL TAGS & SCRIPTS
+              // lastX.replace(/<script>.*>?/g, "");
+              // lastX.replace(/<.*>?/g, "");
+              
+              console.log(
+                "\n==================\n" + "lastURL:: ", last[j] + "\n" +
+                "LASTX :: " + lastX + 
+                "\n==================\n"
+              );
+
+              //PUSH TO XLSX OBJECT
+              sheet.addRows([{URL: last[j].toString(), Body: lastX}]);
+
             });
-          }
+              //console.log("finalSites:" , finalSites);
+              //ADD TO DB
+              
+          };
+          
+          //CREATE XLSX; FIND A WAY TO HANDLE THIS AS A PROMISE
+          workbook.xlsx.writeFile("./cycascrape.xlsx").then(function() {
+            console.log("xls file is written.");
+          });
+
+
+          //END FINAL LAYER
+          res.redirect("/");
+
         })
         .catch(function(err) {
         // If an error occurred, log it
@@ -243,73 +274,45 @@ function getSecondLayer(){
 
 
 
+/*
+
+// A GET route for scraping ScienceNews
+router.get("/exportxml", function(req, res) {
+  //Get sites from sitelist
+  console.log("BITCH FUCK U");
+  SiteList.find({}), function(err, body){
+    console.log("DID IT FUCKING WORK HO?! ::", body);
+  
+
+        // Grab html with axios
+    axios.get("https://www.sciencenews.org/").then(function(response) {
+      // Load into cheerio, save it to $ for shorthand selector
+      var $ = cheerio.load(response.data);
+
+      // WHAT YOU WANT TO DO: grab each image and display it, and the h2 associated with it
+      $("li.term-river-grid__wrapper___fTw9V.with-image").each(function(i, element) {
+        // Save an empty result object
+        var result = {};
+
+      });  
+    });
+
+
+  
+
+    res.redirect("/");
+  };
+});
+*/
+
+
+
 
 
 
 
 /*
 
-
-// A GET route for scraping ScienceNews
-router.get("/scrape/sciencenews", function(req, res) {
-    // Grab html with axios
-    axios.get("https://www.sciencenews.org/").then(function(response) {
-      // Load into cheerio, save it to $ for shorthand selector
-      var $ = cheerio.load(response.data);
-  
-      // WHAT YOU WANT TO DO: grab each image and display it, and the h2 associated with it
-      $("li.term-river-grid__wrapper___fTw9V.with-image").each(function(i, element) {
-        // Save an empty result object
-        var result = {};
-  
-        // Add the text and href of every link, and save them as properties of the result object
-        result.title = $(this)
-          .children("div")
-          .children("h3")
-          .children("a")
-          .text()
-          .trim();
-          //console.log("TITLE:: ", result.title);
-  
-        result.link = $(this)
-          .children("div")
-          .children("h3")
-          .children("a")
-          .attr("href");
-          //console.log("LINK:: ", result.link);
-        
-        result.image = $(this)
-          .children("figure")
-          .children("a")
-          .children("img")
-          .attr("src");
-        
-          // console.log("IMAGE: ", result.image);
-
-        Article.findOne({title:result.title},function(err,data){
-            //Check if the title already exists in the db
-            if (!data){
-                // If it doesn't, create a new Article using the `result` object built from scraping
-                Article.create(result)
-                .then(function(dbArticle) {
-                // View the added result in the console
-                // console.log(dbArticle);
-                })
-                .catch(function(err) {
-                // If an error occurred, log it
-                console.log(err);
-                });
-
-            } else { //Otherwise, log that it exists
-                console.log("This article is already in the db: "+ data.title);
-            }
-        });  
-      });
-  
-      // Return to home page
-      res.redirect("/");
-    });
-});
 
 router.get("/articles/:id", function(req, res) {
     // Using the id passed in the id parameter, query for Article with matching id
@@ -369,23 +372,6 @@ router.post("/articles/comment/delete", function(req, res) {
     });
 });
 
-//||||||||||||||||| NOT NECESSARY; NICE TO HAVE THOUGH ||||||||||||||||||||||
-
-// router.get("/articles", function(req, res) {
-//     // Grab every body in the Articles array
-//     Article.find({}, function(error, body) {
-//       // Log any errors
-//         if (error) {
-//             console.log(error);
-//         }
-//         // Or send the body to the browser as a json object
-//         else {
-//             res.json(body);
-//         }
-//     });
-// });
-
-//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
 */
 
